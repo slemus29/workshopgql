@@ -48,23 +48,6 @@ const resolvers = {
         }
     },
     users: async(_, args, ctx) => {
-        // return [
-        //     {
-        //         id: 123,
-        //         name: "Usuario 1",
-        //         email: 'usuer1@test.com',
-        //     },
-        //     {
-        //         id: 123,
-        //         name: "Usuario 2",
-        //         email: 'usuer2@test.com'
-        //     },
-        //     {
-        //         id: 123,
-        //         name: "Usuario 3",
-        //         email: 'usuer3@test.com'
-        //     }
-        // ]
         const data = await ctx.models.user.find()
         return data
     }
@@ -82,7 +65,20 @@ const resolvers = {
     createUsers: async (_, args, ctx) => {
         
         const emails =  args.users.map ((mail) => mail.email)
-        console.log("array", emails)
+        let hasSameEmails
+        console.log("emails", emails)
+        for (var i = 0; i <= emails.length && !hasSameEmails; i++) {
+            let current = emails[i]
+            for(var j = i+1; j <= emails.length && !hasSameEmails; j++) {
+                if(current == emails[j]){
+                    hasSameEmails = true
+                } else{
+                    hasSameEmails = false
+                }
+            }
+        }
+        console.log("hasSameEmails", hasSameEmails)
+        const emailsNulls = args.users.some((users) => console.log(users)||users==null)
         const compare = await ctx.models.user.exists(
             {
                 email: {
@@ -90,20 +86,8 @@ const resolvers = {
                 }
             }
         );
-        // await ctx.models.user.find({email: args.email}, (err, docs)=> console.log("args", docs))
-        // const email = args.users.map ((mail) => {
-        //     console.log("array", args.users)
-        //     await ctx.models.user.find({email: mail.email}, (err, docs)=> console.log("args", docs))
-            // const item = await ctx.models.user.find({email: mail.email})
-            // if(item.length > 1){
-            //     return false
-                
-            // } else {
-            //     return true;
-            // }
-        // })
-        console.log("compare", compare)
-        if(compare){
+        console.log("compare", compare ,!emailsNulls ,emails.length==0)
+        if(compare || emailsNulls || emails.length==0 || hasSameEmails){
             throw new Error("cant create array of user")
         } else{
             return ctx.models.user.create(args.users);
