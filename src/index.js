@@ -16,6 +16,10 @@ const models = {
 
 
 const typeDefs = `
+  input UserInput {
+    name: String
+    email: String!
+  }
   type User {
     id: ID
     name: String!
@@ -25,10 +29,12 @@ const typeDefs = `
     hello(name: String): String!
     user: User!,
     users: [User]!
+    mono: User
   }
   type Mutation {
       hello(name: String!): Boolean
       createUser(name: String!, email:String!): User
+      createUsers(users: [UserInput!]!) : [User]
   }
 `
 
@@ -72,7 +78,36 @@ const resolvers = {
         } else {
             return ctx.models.user.create(args);
         }
+    },
+    createUsers: async (_, args, ctx) => {
         
+        const emails =  args.users.map ((mail) => mail.email)
+        console.log("array", emails)
+        const compare = await ctx.models.user.exists(
+            {
+                email: {
+                    $in: emails
+                }
+            }
+        );
+        // await ctx.models.user.find({email: args.email}, (err, docs)=> console.log("args", docs))
+        // const email = args.users.map ((mail) => {
+        //     console.log("array", args.users)
+        //     await ctx.models.user.find({email: mail.email}, (err, docs)=> console.log("args", docs))
+            // const item = await ctx.models.user.find({email: mail.email})
+            // if(item.length > 1){
+            //     return false
+                
+            // } else {
+            //     return true;
+            // }
+        // })
+        console.log("compare", compare)
+        if(compare){
+            throw new Error("cant create array of user")
+        } else{
+            return ctx.models.user.create(args.users);
+        }
     }
   },
   User: {
